@@ -70,6 +70,8 @@ pub struct LocalSite {
   pub default_post_listing_mode: PostListingMode,
   /// Default value for [LocalUser.post_listing_mode]
   pub default_sort_type: SortType,
+  /// Block NSFW content being created
+  pub disallow_nsfw_content: bool,
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -101,6 +103,7 @@ pub struct LocalSiteInsertForm {
   pub federation_signed_fetch: Option<bool>,
   pub default_post_listing_mode: Option<PostListingMode>,
   pub default_sort_type: Option<SortType>,
+  pub disallow_nsfw_content: bool,
 }
 
 #[derive(Clone, Default)]
@@ -130,4 +133,5 @@ pub struct LocalSiteUpdateForm {
   pub federation_signed_fetch: Option<bool>,
   pub default_post_listing_mode: Option<PostListingMode>,
   pub default_sort_type: Option<SortType>,
+  pub disallow_nsfw_content: Option<bool>,
 }

@@ -203,6 +203,7 @@ pub struct CreateSite {
   pub registration_mode: Option<RegistrationMode>,
   pub content_warning: Option<String>,
   pub default_post_listing_mode: Option<PostListingMode>,
+  pub disallow_nsfw_content: Option<bool>,
 }
 
 #[skip_serializing_none]
@@ -290,6 +291,7 @@ pub struct EditSite {
   pub content_warning: Option<String>,
   /// Default value for [LocalUser.post_listing_mode]
   pub default_post_listing_mode: Option<PostListingMode>,
+  pub disallow_nsfw_content: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

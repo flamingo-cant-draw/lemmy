@@ -393,6 +393,7 @@ diesel::table! {
         federation_signed_fetch -> Bool,
         default_post_listing_mode -> PostListingModeEnum,
         default_sort_type -> SortTypeEnum,
+        disallow_nsfw_content -> Bool,
     }
 }
 

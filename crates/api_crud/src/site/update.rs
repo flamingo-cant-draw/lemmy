@@ -123,6 +123,7 @@ pub async fn update_site(
     captcha_difficulty: data.captcha_difficulty.clone(),
     reports_email_admins: data.reports_email_admins,
     default_post_listing_mode: data.default_post_listing_mode,
+    disallow_nsfw_content: data.disallow_nsfw_content,
     ..Default::default()
   };
 
@@ -613,6 +614,7 @@ mod tests {
       reports_email_admins: None,
       content_warning: None,
       default_post_listing_mode: None,
+      disallow_nsfw_content: None,
     }
   }
 }

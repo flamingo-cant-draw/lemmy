@@ -77,6 +77,7 @@ pub enum LemmyErrorType {
   CouldntUpdatePost,
   NoPostEditAllowed,
   CouldntFindPost,
+  NsfwNotAllowed,
   EditPrivateMessageNotAllowed,
   SiteAlreadyExists,
   ApplicationQuestionRequired,

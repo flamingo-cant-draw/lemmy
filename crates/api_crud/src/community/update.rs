@@ -12,6 +12,8 @@ use lemmy_api_common::{
     local_site_to_slur_regex,
     process_markdown_opt,
     proxy_image_link_opt_api,
+    check_nsfw_allowed,
+
   },
 };
 use lemmy_db_schema::{
@@ -40,6 +42,7 @@ pub async fn update_community(
   let slur_regex = local_site_to_slur_regex(&local_site);
   let url_blocklist = get_url_blocklist(&context).await?;
   check_slurs_opt(&data.title, &slur_regex)?;
+  check_nsfw_allowed(data.nsfw, Some(&local_site))?;
 
   let description = diesel_string_update(
     process_markdown_opt(&data.description, &slur_regex, &url_blocklist, &context)

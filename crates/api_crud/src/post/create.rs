@@ -8,6 +8,7 @@ use lemmy_api_common::{
   send_activity::SendActivityData,
   utils::{
     check_community_user_action,
+    check_nsfw_allowed,
     get_url_blocklist,
     honeypot_check,
     local_site_to_slur_regex,
@@ -53,9 +54,8 @@ pub async fn create_post(
   context: Data<LemmyContext>,
   local_user_view: LocalUserView,
 ) -> LemmyResult<Json<PostResponse>> {
-  let local_site = LocalSite::read(&mut context.pool()).await?;
-
   honeypot_check(&data.honeypot)?;
+  let local_site = LocalSite::read(&mut context.pool()).await?;
 
   let slur_regex = local_site_to_slur_regex(&local_site);
   check_slurs(&data.name, &slur_regex)?;
@@ -64,6 +64,7 @@ pub async fn create_post(
   let body = process_markdown_opt(&data.body, &slur_regex, &url_blocklist, &context).await?;
   let url = diesel_url_create(data.url.as_deref())?;
   let custom_thumbnail = diesel_url_create(data.custom_thumbnail.as_deref())?;
+  check_nsfw_allowed(data.nsfw, Some(&local_site))?;
 
   is_valid_post_title(&data.name)?;
 

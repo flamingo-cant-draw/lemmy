@@ -111,6 +111,7 @@ pub async fn create_site(
     captcha_enabled: data.captcha_enabled,
     captcha_difficulty: data.captcha_difficulty.clone(),
     default_post_listing_mode: data.default_post_listing_mode,
+    disallow_nsfw_content: data.disallow_nsfw_content,
     ..Default::default()
   };
 
@@ -597,6 +598,7 @@ mod tests {
       registration_mode: site_registration_mode,
       content_warning: None,
       default_post_listing_mode: None,
+      disallow_nsfw_content: None
     }
   }
 }
