@@ -29,7 +29,6 @@ use lemmy_api_common::{
     check_nsfw_allowed,
     get_url_blocklist,
     process_markdown_opt,
-    purge_post_images,
     local_site_opt_to_slur_regex
   },
 };
@@ -241,9 +240,9 @@ impl Object for ApubPost {
     // posts that get updated to be NSFW
     let block_for_nsfw = check_nsfw_allowed(page.sensitive, local_site.as_ref());
     if let Err(e) = block_for_nsfw {
-      let url = url.clone().map(std::convert::Into::into);
-      let thumbnail_url = page.image.map(|i| i.url.into());
-      purge_post_images(url, thumbnail_url, context).await;
+      // TODO: Remove locally generated thumbnail if one exists, depends on
+      //       https://github.com/LemmyNet/lemmy/issues/5564 to be implemented to be able to
+      //       safely do this.
       Post::delete_from_apub_id(&mut context.pool(), page.id.inner().clone()).await?;
       Err(e)?
     }

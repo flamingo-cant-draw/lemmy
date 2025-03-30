@@ -1,6 +1,6 @@
 use crate::{
   context::LemmyContext,
-  request::{delete_image_from_pictrs, fetch_pictrs_proxied_image_details},
+  request::{delete_image_from_pictrs, fetch_pictrs_proxied_image_details, purge_image_from_pictrs},
   site::{FederatedInstances, InstanceWithFederationState},
 };
 use chrono::{DateTime, Days, Local, TimeZone, Utc};
@@ -652,6 +652,19 @@ pub async fn read_site_for_actor(
   let site_id = Site::instance_actor_id_from_url(actor_id.clone().into());
   let site = Site::read_from_apub_id(&mut context.pool(), &site_id.into()).await?;
   Ok(site)
+}
+
+pub async fn purge_post_images(
+  url: Option<DbUrl>,
+  thumbnail_url: Option<DbUrl>,
+  context: &LemmyContext,
+) {
+  if let Some(url) = url {
+    purge_image_from_pictrs(&url, context).await.ok();
+  }
+  if let Some(thumbnail_url) = thumbnail_url {
+    purge_image_from_pictrs(&thumbnail_url, context).await.ok();
+  }
 }
 
 /// Delete a local_user's images
