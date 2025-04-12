@@ -566,17 +566,6 @@ pub async fn get_url_blocklist(context: &LemmyContext) -> LemmyResult<RegexSet> 
   )
 }
 
-pub async fn send_application_approved_email(
-  user: &LocalUserView,
-  settings: &Settings,
-) -> LemmyResult<()> {
-  let email = &user.local_user.email.clone().expect("email");
-  let lang = get_interface_language(user);
-  let subject = lang.registration_approved_subject(&user.person.actor_id);
-  let body = lang.registration_approved_body(&settings.hostname);
-  send_email(&subject, email, &user.person.name, &body, settings).await
-}
-
 /// Send a new applicant email notification to all admins
 pub async fn send_new_applicant_email_to_admins(
   applicant_username: &str,
@@ -623,14 +612,6 @@ pub async fn send_new_report_email_to_admins(
   Ok(())
 }
 
-pub fn check_private_instance_and_federation_enabled(local_site: &LocalSite) -> LemmyResult<()> {
-  if local_site.private_instance && local_site.federation_enabled {
-    Err(LemmyErrorType::CantEnablePrivateInstanceAndFederationTogether)?
-  } else {
-    Ok(())
-  }
-}
-
 pub fn check_nsfw_allowed(nsfw: Option<bool>, local_site: Option<&LocalSite>) -> LemmyResult<()> {
   let is_nsfw = nsfw.unwrap_or_default();
   let nsfw_disallowed = local_site.is_some_and(|s| s.disallow_nsfw_content);
@@ -666,7 +647,6 @@ pub async fn purge_post_images(
     purge_image_from_pictrs(&thumbnail_url, context).await.ok();
   }
 }
-
 /// Delete a local_user's images
 async fn delete_local_user_images(person_id: PersonId, context: &LemmyContext) -> LemmyResult<()> {
   if let Ok(Some(local_user)) = LocalUserView::read_person(&mut context.pool(), person_id).await {
@@ -709,6 +689,8 @@ pub async fn remove_user_data(
 
   // Posts
   Post::update_removed_for_creator(pool, banned_person_id, None, true).await?;
+
+  delete_local_user_images(banned_person_id, context).await?;
 
   // Communities
   // Remove all communities where they're the top mod
