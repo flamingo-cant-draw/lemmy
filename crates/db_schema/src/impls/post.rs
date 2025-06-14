@@ -166,6 +166,7 @@ impl Post {
       .await
       .optional()
   }
+
   pub async fn delete_from_apub_id(
     pool: &mut DbPool<'_>,
     object_id: Url,
