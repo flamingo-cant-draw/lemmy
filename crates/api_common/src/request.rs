@@ -107,7 +107,7 @@ pub async fn fetch_link_metadata(
   // Taken from: https://github.com/mastodon/mastodon/issues/31462#issuecomment-2375525764
   let request = if url
     .domain()
-    .is_some_and(|d| ["youtube.com", "youtu.be"].contains(&d))
+    .is_some_and(|d| d.ends_with("youtube.com") || d.ends_with("youtu.be"))
   {
     request.header(
       USER_AGENT,
