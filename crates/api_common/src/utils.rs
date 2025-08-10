@@ -1,6 +1,10 @@
 use crate::{
   context::LemmyContext,
-  request::{delete_image_from_pictrs, fetch_pictrs_proxied_image_details, purge_image_from_pictrs},
+  request::{
+    delete_image_from_pictrs,
+    fetch_pictrs_proxied_image_details,
+    purge_image_from_pictrs,
+  },
   site::{FederatedInstances, InstanceWithFederationState},
 };
 use chrono::{DateTime, Days, Local, TimeZone, Utc};
@@ -931,7 +935,8 @@ async fn proxy_image_link_internal(
   // Dont rewrite links pointing to local domain.
   if link.domain() == Some(&context.settings().hostname) {
     Ok(link.into())
-  } else if image_mode == PictrsImageMode::ProxyAllImages {
+  } else if image_mode == PictrsImageMode::ProxyAllImages || link.domain() == Some("lemmings.world")
+  {
     RemoteImage::create(&mut context.pool(), vec![link.clone()]).await?;
 
     let proxied = build_proxied_image_url(&link, &context.settings().get_protocol_and_hostname())?;
@@ -1078,6 +1083,18 @@ mod tests {
     .unwrap();
     assert_eq!(
       "https://lemmy-alpha/api/v3/image_proxy?url=http%3A%2F%2Flemmy-beta%2Fimage.png",
+      proxied.as_str()
+    );
+
+    let lemmings_image =
+      Url::parse("https://lemmings.world/pictrs/image/cc55c4db-77b3-4527-abb3-0109c7af6e0f.jpeg")
+        .unwrap();
+    let proxied =
+      proxy_image_link_internal(lemmings_image.clone(), PictrsImageMode::None, &context)
+        .await
+        .unwrap();
+    assert_eq!(
+      "https://lemmy-alpha/api/v3/image_proxy?url=https%3A%2F%2Flemmings.world%2Fpictrs%2Fimage%2Fcc55c4db-77b3-4527-abb3-0109c7af6e0f.jpeg",
       proxied.as_str()
     );
 
