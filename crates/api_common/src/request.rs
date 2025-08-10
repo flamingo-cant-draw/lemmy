@@ -26,7 +26,7 @@ use lemmy_utils::{
 };
 use mime::{Mime, TEXT_HTML};
 use reqwest::{
-  header::{CONTENT_TYPE, LOCATION, RANGE},
+  header::{CONTENT_TYPE, LOCATION, RANGE, USER_AGENT},
   redirect::Policy,
   Client,
   ClientBuilder,
@@ -89,19 +89,38 @@ pub async fn fetch_link_metadata(
   }
 
   info!("Fetching site metadata for url: {}", url);
+
   // We only fetch the first MB of data in order to not waste bandwidth especially for large
   // binary files. This high limit is particularly needed for youtube, which includes a lot of
   // javascript code before the opengraph tags. Mastodon also uses a 1 MB limit:
   // https://github.com/mastodon/mastodon/blob/295ad6f19a016b3f16e1201ffcbb1b3ad6b455a2/app/lib/request.rb#L213
   let bytes_to_fetch = 1024 * 1024;
-  let response = context
+
+  let request = context
     .client()
     .get(url.as_str())
     // we only need the first chunk of data. Note that we do not check for Accept-Range so the
     // server may ignore this and still respond with the full response
-    .header(RANGE, format!("bytes=0-{}", bytes_to_fetch - 1)) /* -1 because inclusive */
-    .send()
-    .await?;
+    .header(RANGE, format!("bytes=0-{}", bytes_to_fetch - 1)) /* -1 because inclusive */;
+
+  // Youtube sends junk metadata to Hetzner IPs, unless we pretend to be Discord.
+  // Taken from: https://github.com/mastodon/mastodon/issues/31462#issuecomment-2375525764
+  let request = if url
+    .domain()
+    .is_some_and(|d| ["youtube.com", "youtu.be"].contains(&d))
+  {
+    request.header(
+      USER_AGENT,
+      format!(
+        "Lemmy/{VERSION}, like Discordbot; +{}",
+        context.settings().get_protocol_and_hostname()
+      ),
+    )
+  } else {
+    request
+  };
+
+  let response = request.send().await?;
 
   // Manually follow one redirect, using internal IP check. Further redirects are ignored.
   let location = response

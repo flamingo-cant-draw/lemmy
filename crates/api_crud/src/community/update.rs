@@ -8,12 +8,11 @@ use lemmy_api_common::{
   send_activity::{ActivityChannel, SendActivityData},
   utils::{
     check_community_mod_action,
+    check_nsfw_allowed,
     get_url_blocklist,
     local_site_to_slur_regex,
     process_markdown_opt,
     proxy_image_link_opt_api,
-    check_nsfw_allowed,
-
   },
 };
 use lemmy_db_schema::{

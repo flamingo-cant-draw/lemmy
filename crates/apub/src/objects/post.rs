@@ -29,8 +29,8 @@ use lemmy_api_common::{
   utils::{
     check_nsfw_allowed,
     get_url_blocklist,
+    local_site_opt_to_slur_regex,
     process_markdown_opt,
-    local_site_opt_to_slur_regex
   },
 };
 use lemmy_db_schema::{

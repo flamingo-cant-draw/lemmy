@@ -542,7 +542,7 @@ mod tests {
       registration_mode: site_registration_mode,
       content_warning: None,
       default_post_listing_mode: None,
-      disallow_nsfw_content: None
+      disallow_nsfw_content: None,
     }
   }
 }
