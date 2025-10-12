@@ -243,7 +243,7 @@ pub async fn generate_post_link_metadata(
   };
 
   let image_url = if is_image_post {
-    post.url
+    url.clone().unwrap_or(post.url)
   } else {
     metadata.opengraph_data.image.clone()
   };

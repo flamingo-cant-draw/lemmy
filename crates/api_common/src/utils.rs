@@ -940,11 +940,14 @@ async fn proxy_image_link_internal(
   image_mode: PictrsImageMode,
   context: &LemmyContext,
 ) -> LemmyResult<DbUrl> {
+  let proxy_domains = ["lemmings.world", "imgur.com"];
+  let should_proxy = proxy_domains
+    .iter()
+    .any(|d| link.domain().unwrap_or_default().ends_with(d));
   // Dont rewrite links pointing to local domain.
   if link.domain() == Some(&context.settings().hostname) {
     Ok(link.into())
-  } else if image_mode == PictrsImageMode::ProxyAllImages || link.domain() == Some("lemmings.world")
-  {
+  } else if image_mode == PictrsImageMode::ProxyAllImages || should_proxy {
     RemoteImage::create(&mut context.pool(), vec![link.clone()]).await?;
 
     let proxied = build_proxied_image_url(&link, &context.settings().get_protocol_and_hostname())?;
