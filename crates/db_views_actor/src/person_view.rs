@@ -5,7 +5,6 @@ use diesel::{
   BoolExpressionMethods,
   ExpressionMethods,
   NullableExpressionMethods,
-  OptionalExtension,
   PgTextExpressionMethods,
   QueryDsl,
 };
@@ -16,7 +15,6 @@ use lemmy_db_schema::{
   utils::{
     functions::coalesce,
     fuzzy_search,
-    get_conn,
     limit_and_offset,
     now,
     DbConn,
@@ -148,30 +146,6 @@ impl PersonView {
 
   pub async fn banned(pool: &mut DbPool<'_>) -> Result<Vec<Self>, Error> {
     queries().list(pool, ListMode::Banned).await
-  }
-
-  pub async fn read_admin<'a>(
-    pool: &mut DbPool<'_>,
-    person_id: PersonId,
-    is_admin: bool,
-  ) -> Result<Option<Self>, Error> {
-    let conn = &mut get_conn(pool).await?;
-    let mut query = person::table
-      .find(person_id)
-      .into_boxed()
-      .inner_join(person_aggregates::table)
-      .left_join(local_user::table)
-      .select((
-        person::all_columns,
-        person_aggregates::all_columns,
-        coalesce(local_user::admin.nullable(), false),
-      ));
-
-    if !is_admin {
-      query = query.filter(person::deleted.eq(false));
-    }
-
-    query.first(conn).await.optional()
   }
 }
 
