@@ -463,13 +463,15 @@ fn queries<'a>() -> Queries<
       ));
 
       // Don't show blocked instances, communities or persons
-      query = query.filter(not(exists(
-        community_block::table.filter(
-          post_aggregates::community_id
-            .eq(community_block::community_id)
-            .and(community_block::person_id.eq(person_id_join)),
-        ),
-      )));
+      if options.community_id.is_none() {
+        query = query.filter(not(exists(
+          community_block::table.filter(
+            post_aggregates::community_id
+              .eq(community_block::community_id)
+              .and(community_block::person_id.eq(person_id_join)),
+          ),
+        )));
+      }
       query = query.filter(not(exists(
         instance_block::table.filter(
           post_aggregates::instance_id
