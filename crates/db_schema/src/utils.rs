@@ -1,6 +1,6 @@
 use crate::{newtypes::DbUrl, CommentSortType, SortType};
 use chrono::{DateTime, TimeDelta, Utc};
-use deadpool::Runtime;
+use deadpool::{managed::Timeouts, Runtime};
 use diesel::{
   helper_types::AsExprOf,
   pg::Pg,
@@ -430,9 +430,18 @@ pub async fn build_db_pool() -> LemmyResult<ActualDbPool> {
   let mut config = ManagerConfig::default();
   config.custom_setup = Box::new(establish_connection);
   let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new_with_config(&db_url, config);
+
+  // Don't allow pool sizes below 2. See https://github.com/LemmyNet/lemmy/issues/5112
+  let pool_size = std::cmp::max(SETTINGS.database.pool_size, 2);
+
   let pool = Pool::builder(manager)
-    .max_size(SETTINGS.database.pool_size)
+    .max_size(pool_size)
     .runtime(Runtime::Tokio1)
+    .timeouts(Timeouts {
+      wait: Some(Duration::from_secs(1)),
+      create: Some(Duration::from_secs(5)),
+      recycle: Some(Duration::from_secs(5)),
+    })
     // Limit connection age to prevent use of prepared statements that have query plans based on
     // very old statistics
     .pre_recycle(Hook::sync_fn(|_conn, metrics| {
@@ -440,7 +449,7 @@ pub async fn build_db_pool() -> LemmyResult<ActualDbPool> {
       // from the pool
       let conn_was_used = metrics.recycled.is_some();
       if metrics.age() > Duration::from_secs(3 * 24 * 60 * 60) && conn_was_used {
-        Err(HookError::Continue(None))
+        Err(HookError::Message("Connection is too old".into()))
       } else {
         Ok(())
       }
@@ -485,6 +494,7 @@ static EMAIL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     .expect("compile email regex")
 });
 
+#[allow(deprecated)]
 pub mod functions {
   use diesel::sql_types::{BigInt, Bool, Text, Timestamptz};
 
